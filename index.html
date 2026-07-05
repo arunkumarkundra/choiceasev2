@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Choicease — Smart Choices, Made Easy</title>
+  <meta name="description" content="Structured decision analysis in your browser. Weigh options against criteria, see a defensible recommendation with confidence and sensitivity — free, private, no sign-up.">
+  <link rel="canonical" href="https://choicease.com/">
+
+  <!-- Open Graph / Twitter -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Choicease — Smart Choices, Made Easy">
+  <meta property="og:description" content="Structured decision analysis in your browser. Free, private, board-ready output.">
+  <meta property="og:url" content="https://choicease.com/">
+  <meta property="og:image" content="https://choicease.com/images/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://choicease.com/images/og-image.png">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Choicease",
+    "url": "https://choicease.com",
+    "description": "Structured decision analysis in the browser — weighted criteria, sensitivity analysis, board-ready reports. Free and private.",
+    "applicationCategory": "Productivity",
+    "operatingSystem": "Web"
+  }
+  </script>
+
+  <!-- Favicons (kept from existing repo) -->
+  <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Third-party libraries (pinned versions, deferred) -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <a href="#" id="brandHome" class="brand" aria-label="Choicease home">
+      <span class="brand__mark" aria-hidden="true"></span>
+      <span class="brand__name">Choicease</span>
+      <span class="brand__tag">Decision analysis</span>
+    </a>
+    <nav class="topbar__nav">
+      <button type="button" class="btn btn--ghost" id="howItWorksBtn">How it works</button>
+    </nav>
+  </header>
+
+  <main class="shell">
+
+    <!-- Draft resume banner -->
+    <div id="draftBanner" class="draft-banner is-hidden" role="status">
+      <span id="draftBannerText"></span>
+      <span class="draft-banner__actions">
+        <button type="button" class="btn btn--small" id="draftResume">Resume</button>
+        <button type="button" class="btn btn--ghost btn--small" id="draftDismiss">Dismiss</button>
+      </span>
+    </div>
+
+    <!-- Stepper -->
+    <div class="progress" aria-hidden="true"><div class="progress__fill" id="progressFill"></div></div>
+    <ol class="stepper" id="stepper" aria-label="Decision steps">
+      <li class="stepper__item"><span class="stepper__num mono">1</span><span class="stepper__label">Frame</span></li>
+      <li class="stepper__item"><span class="stepper__num mono">2</span><span class="stepper__label">Options</span></li>
+      <li class="stepper__item"><span class="stepper__num mono">3</span><span class="stepper__label">Criteria</span></li>
+      <li class="stepper__item"><span class="stepper__num mono">4</span><span class="stepper__label">Weights</span></li>
+      <li class="stepper__item"><span class="stepper__num mono">5</span><span class="stepper__label">Ratings</span></li>
+      <li class="stepper__item"><span class="stepper__num mono">6</span><span class="stepper__label">Verdict</span></li>
+    </ol>
+
+    <!-- Step 1 — Frame -->
+    <section class="step" id="step-1" aria-labelledby="step1Title">
+      <header class="step__head">
+        <h1 class="step__title" id="step1Title">Frame the decision</h1>
+        <p class="step__lede">One clear sentence. Everything downstream sharpens or blurs with it.</p>
+      </header>
+
+      <div class="field">
+        <label for="decisionTitle">Decision</label>
+        <input type="text" id="decisionTitle" maxlength="100" autocomplete="off"
+               placeholder="e.g., Which vendor should we award the Q3 contract to?">
+      </div>
+      <div class="field">
+        <label for="decisionDescription">Context <span class="field__optional">optional</span></label>
+        <textarea id="decisionDescription" rows="3" maxlength="500"
+                  placeholder="Constraints, stakeholders, timing — anything that shapes the call."></textarea>
+      </div>
+
+      <div class="step__actions">
+        <span></span>
+        <button type="button" class="btn btn--primary" id="toStep2">Continue</button>
+      </div>
+
+      <div class="import-strip">
+        <span class="import-strip__label">Or restore a saved decision</span>
+        <label class="btn btn--ghost btn--small" for="importQRInput">Import QR image</label>
+        <input type="file" id="importQRInput" accept="image/*" hidden>
+        <label class="btn btn--ghost btn--small" for="importJSONInput">Import JSON</label>
+        <input type="file" id="importJSONInput" accept=".json,application/json" hidden>
+      </div>
+    </section>
+
+    <!-- Step 2 — Options -->
+    <section class="step is-hidden" id="step-2" aria-labelledby="step2Title">
+      <header class="step__head">
+        <h2 class="step__title" id="step2Title">List the options</h2>
+        <p class="step__lede">The candidates on the table. Two to twelve — enough to compare, few enough to think.</p>
+      </header>
+
+      <div class="field-row">
+        <div class="field field--grow">
+          <label for="optionName">Option</label>
+          <input type="text" id="optionName" maxlength="100" autocomplete="off" placeholder="e.g., Vendor A">
+        </div>
+        <div class="field field--grow">
+          <label for="optionDescription">Note <span class="field__optional">optional</span></label>
+          <input type="text" id="optionDescription" maxlength="250" autocomplete="off" placeholder="One-line description">
+        </div>
+        <button type="button" class="btn btn--primary field-row__btn" id="addOptionBtn">Add</button>
+      </div>
+
+      <div class="list-head"><span class="list-head__count mono" id="optionsCount"></span></div>
+      <div class="item-list" id="optionsList"></div>
+
+      <div class="step__actions">
+        <button type="button" class="btn btn--ghost" id="toStep1">Back</button>
+        <button type="button" class="btn btn--primary" id="toStep3">Continue</button>
+      </div>
+    </section>
+
+    <!-- Step 3 — Criteria -->
+    <section class="step is-hidden" id="step-3" aria-labelledby="step3Title">
+      <header class="step__head">
+        <h2 class="step__title" id="step3Title">Set the criteria</h2>
+        <p class="step__lede">What actually decides this — cost, quality, risk, speed, fit. Five to seven is the sweet spot.</p>
+      </header>
+
+      <div class="field-row">
+        <div class="field field--grow">
+          <label for="criterionName">Criterion</label>
+          <input type="text" id="criterionName" maxlength="100" autocomplete="off" placeholder="e.g., Total cost of ownership">
+        </div>
+        <div class="field field--grow">
+          <label for="criterionDescription">What it measures <span class="field__optional">optional</span></label>
+          <input type="text" id="criterionDescription" maxlength="250" autocomplete="off" placeholder="How you'll judge it">
+        </div>
+        <button type="button" class="btn btn--primary field-row__btn" id="addCriterionBtn">Add</button>
+      </div>
+
+      <div class="list-head"><span class="list-head__count mono" id="criteriaCount"></span></div>
+      <div class="item-list" id="criteriaList"></div>
+
+      <p class="note is-hidden" id="criteriaOverloadNote">
+        That's a lot of criteria. Beyond seven, judgment quality tends to drop — consider merging overlapping ones.
+      </p>
+
+      <div class="step__actions">
+        <button type="button" class="btn btn--ghost" id="backTo2">Back</button>
+        <button type="button" class="btn btn--primary" id="toStep4">Continue</button>
+      </div>
+    </section>
+
+    <!-- Step 4 — Weights -->
+    <section class="step is-hidden" id="step-4" aria-labelledby="step4Title">
+      <header class="step__head">
+        <h2 class="step__title" id="step4Title">Weigh what matters</h2>
+        <p class="step__lede">Rate each criterion's importance from 1 (marginal) to 5 (critical). The effective weight — normalized to 100% — is shown live.</p>
+      </header>
+
+      <div class="weighting" id="weightingList"></div>
+
+      <p class="note">Resist rating everything a 5 — differentiation is what makes the analysis decisive.</p>
+
+      <div class="step__actions">
+        <button type="button" class="btn btn--ghost" id="backTo3">Back</button>
+        <button type="button" class="btn btn--primary" id="toStep5">Continue</button>
+      </div>
+    </section>
+
+    <!-- Step 5 — Ratings -->
+    <section class="step is-hidden" id="step-5" aria-labelledby="step5Title">
+      <header class="step__head">
+        <h2 class="step__title" id="step5Title">Rate the options</h2>
+        <p class="step__lede">Score each option on each criterion: 0 = unacceptable, 3 = good, 5 = excellent. Decimals are fine.</p>
+      </header>
+
+      <div class="rating-matrix" id="ratingMatrix"></div>
+
+      <div class="step__actions">
+        <button type="button" class="btn btn--ghost" id="backTo4">Back</button>
+        <button type="button" class="btn btn--primary" id="toStep6">See the verdict</button>
+      </div>
+    </section>
+
+    <!-- Step 6 — Verdict -->
+    <section class="step is-hidden" id="step-6" aria-labelledby="step6Title">
+      <h2 class="visually-hidden" id="step6Title">Verdict</h2>
+
+      <div class="verdict" id="verdictCard"></div>
+
+      <!-- Actions -->
+      <div class="verdict-actions">
+        <div class="verdict-actions__group" role="group" aria-label="Share this decision">
+          <button type="button" class="btn btn--primary" id="shareNativeBtn">Share</button>
+          <button type="button" class="btn btn--ghost" id="shareXBtn" aria-label="Share on X">Post on 𝕏</button>
+          <button type="button" class="btn btn--ghost" id="shareWhatsAppBtn">WhatsApp</button>
+          <button type="button" class="btn btn--ghost" id="shareLinkedInBtn">LinkedIn</button>
+          <button type="button" class="btn btn--ghost" id="shareCopyBtn">Copy text</button>
+        </div>
+        <div class="verdict-actions__group">
+          <div class="menu">
+            <button type="button" class="btn btn--secondary" id="exportMenuBtn"
+                    aria-haspopup="true" aria-expanded="false">Export ▾</button>
+            <div class="menu__list" id="exportMenu" role="menu">
+              <button type="button" role="menuitem" data-export="pdf">PDF report</button>
+              <button type="button" role="menuitem" data-export="csv">CSV data</button>
+              <button type="button" role="menuitem" data-export="json">JSON (re-importable)</button>
+              <button type="button" role="menuitem" data-export="qr">QR image</button>
+            </div>
+          </div>
+          <button type="button" class="btn btn--ghost" id="copySummaryBtn">Copy exec summary</button>
+          <button type="button" class="btn btn--ghost" id="refineBtn">Refine weights</button>
+          <button type="button" class="btn btn--ghost" id="startOverBtn">New decision</button>
+        </div>
+      </div>
+
+      <!-- Drill-down panels: answer → drivers → evidence -->
+      <div class="panel is-open" id="panelDrivers">
+        <button type="button" class="panel__toggle" aria-expanded="true">
+          <span>Why this wins</span><span class="panel__chevron" aria-hidden="true"></span>
+        </button>
+        <div class="panel__body"></div>
+      </div>
+
+      <div class="panel" id="panelRanking">
+        <button type="button" class="panel__toggle" aria-expanded="false">
+          <span>Full ranking</span><span class="panel__chevron" aria-hidden="true"></span>
+        </button>
+        <div class="panel__body"></div>
+      </div>
+
+      <div class="panel" id="panelMatrix">
+        <button type="button" class="panel__toggle" aria-expanded="false">
+          <span>Score matrix</span><span class="panel__chevron" aria-hidden="true"></span>
+        </button>
+        <div class="panel__body"></div>
+      </div>
+
+      <div class="panel" id="panelSensitivity">
+        <button type="button" class="panel__toggle" aria-expanded="false">
+          <span>Sensitivity &amp; flip points</span><span class="panel__chevron" aria-hidden="true"></span>
+        </button>
+        <div class="panel__body"></div>
+      </div>
+
+      <div class="panel" id="panelWhatIf">
+        <button type="button" class="panel__toggle" aria-expanded="false">
+          <span>What-if: live weight sliders</span><span class="panel__chevron" aria-hidden="true"></span>
+        </button>
+        <div class="panel__body"></div>
+      </div>
+
+      <div class="panel" id="panelMethod">
+        <button type="button" class="panel__toggle" aria-expanded="false">
+          <span>Method &amp; assumptions</span><span class="panel__chevron" aria-hidden="true"></span>
+        </button>
+        <div class="panel__body"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>© <span id="year"></span> Choicease · Runs entirely in your browser — nothing is uploaded ·
+      <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> ·
+      <a href="mailto:contact@choicease.com">Contact</a>
+    </p>
+  </footer>
+
+  <!-- How it works modal -->
+  <div class="modal" id="howItWorksModal" role="dialog" aria-modal="true" aria-labelledby="howItWorksTitle">
+    <div class="modal__content">
+      <header class="modal__head">
+        <h2 id="howItWorksTitle">How Choicease works</h2>
+        <button type="button" class="modal__close" data-close-modal="howItWorksModal" aria-label="Close">&times;</button>
+      </header>
+      <div class="modal__body">
+        <p>Choicease turns a hard call into a defensible recommendation in six short steps — the same weighted multi-criteria method consultants use, without the spreadsheet.</p>
+        <ol>
+          <li><strong>Frame</strong> the decision in one sentence.</li>
+          <li><strong>List options</strong> — the candidates on the table.</li>
+          <li><strong>Set criteria</strong> — what actually decides it.</li>
+          <li><strong>Weigh</strong> each criterion's importance; weights normalize to 100% automatically.</li>
+          <li><strong>Rate</strong> every option on every criterion (0–5).</li>
+          <li><strong>Verdict</strong> — a recommendation with confidence, drivers, flip points, and live what-if sliders.</li>
+        </ol>
+        <p>Then export a board-ready PDF, the underlying CSV, or a QR/JSON snapshot you can re-import and rework any time.</p>
+        <ul>
+          <li><strong>Private by design.</strong> Everything runs in your browser; nothing is uploaded.</li>
+          <li><strong>Honest by design.</strong> Confidence is graded, assumptions are visible, and sensitivity analysis shows exactly when the answer would flip.</li>
+          <li><strong>Free.</strong> No account, no limits.</li>
+        </ul>
+      </div>
+      <footer class="modal__foot">
+        <button type="button" class="btn btn--primary" id="howItWorksStart" data-close-modal="howItWorksModal">Start deciding</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Confirm modal -->
+  <div class="modal" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmMessage">
+    <div class="modal__content modal__content--small">
+      <div class="modal__body">
+        <p id="confirmMessage"></p>
+      </div>
+      <footer class="modal__foot">
+        <button type="button" class="btn btn--ghost" id="confirmCancel">Cancel</button>
+        <button type="button" class="btn btn--primary" id="confirmOk">Continue</button>
+      </footer>
+    </div>
+  </div>
+
+</body>
+</html>
