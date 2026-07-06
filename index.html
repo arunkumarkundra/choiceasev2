@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Choicease — Smart Choices, Made Easy</title>
+  <meta name="description" content="Turn tough decisions into clear answers. Weigh options against what matters, get a winner with honest confidence, share it in one tap — free, private, no sign-up.">
+  <link rel="canonical" href="https://choicease.com/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Choicease — Smart Choices, Made Easy">
+  <meta property="og:description" content="Turn tough decisions into clear answers — free, private, no sign-up.">
+  <meta property="og:url" content="https://choicease.com/">
+  <meta property="og:image" content="https://choicease.com/images/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://choicease.com/images/og-image.png">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Choicease",
+    "url": "https://choicease.com",
+    "description": "Guided decision-making tool: weighted criteria, honest confidence, sensitivity analysis, shareable results. Free and private.",
+    "applicationCategory": "Productivity",
+    "operatingSystem": "Web"
+  }
+  </script>
+
+  <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Third-party libraries — the battle-tested stack, pinned -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <a href="#" id="brandHome" class="brand" aria-label="Choicease home">
+      <span class="brand__mark" aria-hidden="true"></span>
+      <span class="brand__name">Choicease</span>
+      <span class="brand__tag">Smart choices, made easy</span>
+    </a>
+    <nav class="topbar__nav">
+      <button type="button" class="btn btn--ghost" id="howItWorksBtn">How it works</button>
+    </nav>
+  </header>
+
+  <main class="shell">
+
+    <!-- Draft resume banner -->
+    <div id="draftBanner" class="draft-banner is-hidden" role="status">
+      <span id="draftBannerText"></span>
+      <span class="draft-banner__actions">
+        <button type="button" class="btn btn--small" id="draftResume">Resume</button>
+        <button type="button" class="btn btn--ghost btn--small" id="draftDismiss">Dismiss</button>
+      </span>
+    </div>
+
+    <!-- Stepper -->
+    <div class="progress" aria-hidden="true"><div class="progress__fill" id="progressFill"></div></div>
+    <ol class="stepper" id="stepper" aria-label="Decision steps">
+      <li class="stepper__item"><span class="stepper__num mono">1</span><span class="stepper__label">Frame</span></li>
+      <li class="stepper__item"><span class="stepper__num mono">2</span><span class="stepper__label">Options</span></li>
+      <li class="stepper__item"><span class="stepper__num mono">3</span><span class="stepper__label">Criteria</span></li>
+      <li class="stepper__item"><span class="stepper__num mono">4</span><span class="stepper__label">Weights</span></li>
+      <li class="stepper__item"><span class="stepper__num mono">5</span><span class="stepper__label">Ratings</span></li>
+      <li class="stepper__item"><span class="stepper__num mono">6</span><span class="stepper__label">Results</span></li>
+    </ol>
+
+    <!-- Step 1 — Frame -->
+    <section class="step" id="step-1" aria-labelledby="step1Title">
+      <header class="step__head">
+        <h1 class="step__title" id="step1Title">What are we deciding?</h1>
+        <p class="step__lede">One clear sentence is all it takes. We'll handle the heavy lifting from here.</p>
+      </header>
+
+      <div class="field">
+        <label for="decisionTitle">Your decision</label>
+        <input type="text" id="decisionTitle" maxlength="100" autocomplete="off"
+               placeholder="e.g., Which laptop should I buy?">
+      </div>
+      <div class="field">
+        <label for="decisionDescription">A bit of context <span class="field__optional">optional</span></label>
+        <textarea id="decisionDescription" rows="3" maxlength="500"
+                  placeholder="Anything that shapes the call — budget, timing, who it's for…"></textarea>
+      </div>
+
+      <div class="step__actions">
+        <button type="button" class="btn btn--ghost" id="loadSampleBtn">🚗 Try a sample decision</button>
+        <button type="button" class="btn btn--primary" id="toStep2">Let's go</button>
+      </div>
+
+      <div class="import-strip">
+        <span class="import-strip__label">Coming back to one?</span>
+        <label class="btn btn--ghost btn--small" for="importQRInput">📷 Import QR image</label>
+        <input type="file" id="importQRInput" accept="image/*" hidden>
+        <label class="btn btn--ghost btn--small" for="importJSONInput">📁 Import JSON</label>
+        <input type="file" id="importJSONInput" accept=".json,application/json" hidden>
+      </div>
+      <p class="community-line">Curious what others are deciding? Browse decisions shared on 𝕏 →
+        <a href="https://x.com/search?q=ChoiceaseDecision" target="_blank" rel="noopener"><strong>#ChoiceaseDecision</strong></a>
+        — or explore the curated <a href="gallery.html"><strong>Decision Gallery</strong></a>.
+      </p>
+    </section>
+
+    <!-- Step 2 — Options -->
+    <section class="step is-hidden" id="step-2" aria-labelledby="step2Title">
+      <header class="step__head">
+        <h2 class="step__title" id="step2Title">What's on the table?</h2>
+        <p class="step__lede">Add the choices you're weighing — even the long shots. You can edit or drop any of them later.</p>
+      </header>
+
+      <div class="field-row">
+        <div class="field field--grow">
+          <label for="optionName">Option</label>
+          <input type="text" id="optionName" maxlength="100" autocomplete="off" placeholder="e.g., MacBook Pro 14-inch">
+        </div>
+        <div class="field field--grow">
+          <label for="optionDescription">Quick note <span class="field__optional">optional</span></label>
+          <input type="text" id="optionDescription" maxlength="250" autocomplete="off" placeholder="One-liner about it">
+        </div>
+        <button type="button" class="btn btn--primary field-row__btn" id="addOptionBtn">Add it</button>
+      </div>
+
+      <div class="list-head"><span class="list-head__count mono" id="optionsCount"></span></div>
+      <div class="item-list" id="optionsList"></div>
+
+      <p class="note is-hidden" id="optionsFewNote">
+        <strong>⚠️ Bias alert — too few options.</strong> Toss in a couple more (aim for 3–7) — widening the field often sparks better ideas. We've all anchored on two too early! 😉
+      </p>
+      <p class="note is-hidden" id="optionsManyNote">
+        That's a big field! No limit here — just know that beyond ~8 options, comparing gets tiring. The dominance check in advanced analytics can help prune later.
+      </p>
+
+      <div class="step__actions">
+        <button type="button" class="btn btn--ghost" id="toStep1">Back</button>
+        <button type="button" class="btn btn--primary" id="toStep3">Continue</button>
+      </div>
+    </section>
+
+    <!-- Step 3 — Criteria -->
+    <section class="step is-hidden" id="step-3" aria-labelledby="step3Title">
+      <header class="step__head">
+        <h2 class="step__title" id="step3Title">What actually matters?</h2>
+        <p class="step__lede">The yardsticks you'll judge every option by — cost, quality, gut-feel-made-honest. Two minimum; 5–7 is the sweet spot.</p>
+      </header>
+
+      <div id="starterChips" class="starter-chips is-hidden"></div>
+
+      <div class="field-row">
+        <div class="field field--grow">
+          <label for="criterionName">Criterion</label>
+          <input type="text" id="criterionName" maxlength="100" autocomplete="off" placeholder="e.g., Price, Battery life, Vibe">
+        </div>
+        <div class="field field--grow">
+          <label for="criterionDescription">What it measures <span class="field__optional">optional</span></label>
+          <input type="text" id="criterionDescription" maxlength="250" autocomplete="off" placeholder="How you'll judge it">
+        </div>
+        <button type="button" class="btn btn--primary field-row__btn" id="addCriterionBtn">Add it</button>
+      </div>
+
+      <div class="list-head"><span class="list-head__count mono" id="criteriaCount"></span></div>
+      <div class="item-list" id="criteriaList"></div>
+
+      <p class="note is-hidden" id="criteriaOverloadNote">
+        <strong>⚠️ Bias alert — cognitive overload.</strong> Whoa, that's a lot of yardsticks! Try grouping similar ones or picking your top 5–7 to keep things breezy.
+      </p>
+
+      <div class="assist-strip">
+        🤖 Stuck on criteria? Our <a data-gpt-link href="#" target="_blank" rel="noopener"><strong>Choicease Helper GPT</strong></a> can spark ideas —
+        or <button type="button" class="linklike" data-copy-prompt="criteria">copy a ready-made prompt</button> for ChatGPT, Claude, or Gemini. It already includes your decision.
+      </div>
+
+      <div class="step__actions">
+        <button type="button" class="btn btn--ghost" id="backTo2">Back</button>
+        <button type="button" class="btn btn--primary" id="toStep4">Continue</button>
+      </div>
+    </section>
+
+    <!-- Step 4 — Weights -->
+    <section class="step is-hidden" id="step-4" aria-labelledby="step4Title">
+      <header class="step__head">
+        <h2 class="step__title" id="step4Title">Weigh what matters</h2>
+        <p class="step__lede">Rate each criterion from 1 (meh) to 5 (must-have). We normalize to 100% behind the scenes — the live % shows each one's real pull.</p>
+      </header>
+
+      <div class="weighting" id="weightingList"></div>
+
+      <p class="note is-hidden" id="equalWeightNote">
+        <strong>💡 Everything's rated the same.</strong> Equal weights means nothing tips the scales — zero in on what really counts and the answer gets sharper.
+      </p>
+
+      <div class="assist-strip">
+        🎯 Not sure how to prioritize? Ask the <a data-gpt-link href="#" target="_blank" rel="noopener"><strong>Helper GPT</strong></a> —
+        or <button type="button" class="linklike" data-copy-prompt="weights">copy a prompt</button> with your criteria baked in.
+      </div>
+
+      <div class="step__actions">
+        <button type="button" class="btn btn--ghost" id="backTo3">Back</button>
+        <button type="button" class="btn btn--primary" id="toStep5">Continue</button>
+      </div>
+    </section>
+
+    <!-- Step 5 — Ratings -->
+    <section class="step is-hidden" id="step-5" aria-labelledby="step5Title">
+      <header class="step__head">
+        <h2 class="step__title" id="step5Title">How do they stack up?</h2>
+        <p class="step__lede">Score each option on each criterion: 0 = unacceptable, 5 = excellent. Decimals welcome. Sliders start at the 2.5 midpoint — nudge them to make them yours.</p>
+      </header>
+
+      <div class="rating-matrix" id="ratingMatrix"></div>
+
+      <div class="assist-strip">
+        ⚖️ Want a fair second opinion? The <a data-gpt-link href="#" target="_blank" rel="noopener"><strong>Helper GPT</strong></a> can guide your ratings —
+        or <button type="button" class="linklike" data-copy-prompt="ratings">copy a prompt</button> with your options and criteria included.
+      </div>
+
+      <div class="step__actions">
+        <button type="button" class="btn btn--ghost" id="backTo4">Back</button>
+        <button type="button" class="btn btn--primary" id="toStep6">See my results! 🎉</button>
+      </div>
+    </section>
+
+    <!-- Step 6 — Results -->
+    <section class="step step--results is-hidden" id="step-6" aria-labelledby="step6Title">
+      <h2 class="visually-hidden" id="step6Title">Results</h2>
+
+      <!-- Casual layer -->
+      <div id="casualResults"></div>
+
+      <!-- Actions -->
+      <div class="verdict-actions">
+        <div class="verdict-actions__group" role="group" aria-label="Share this decision">
+          <button type="button" class="btn btn--primary" id="shareNativeBtn">↗️ Share</button>
+          <button type="button" class="btn btn--ghost" id="shareWhatsAppBtn">WhatsApp</button>
+          <button type="button" class="btn btn--ghost" id="shareXBtn" aria-label="Post on X">Post on 𝕏</button>
+          <button type="button" class="btn btn--ghost" id="copyLinkBtn">🔗 Copy link</button>
+          <button type="button" class="btn btn--ghost" id="shareImageBtn">🖼️ Save image</button>
+          <button type="button" class="btn btn--ghost" id="shareCopyBtn">Copy text</button>
+        </div>
+        <div class="verdict-actions__group">
+          <div class="menu">
+            <button type="button" class="btn btn--secondary" id="exportMenuBtn"
+                    aria-haspopup="true" aria-expanded="false">💾 Save ▾</button>
+            <div class="menu__list" id="exportMenu" role="menu">
+              <button type="button" role="menuitem" data-export="pdf">📄 PDF report</button>
+              <button type="button" role="menuitem" data-export="pptx">📊 PowerPoint deck</button>
+              <button type="button" role="menuitem" data-export="csv">🧮 CSV data</button>
+              <button type="button" role="menuitem" data-export="json">📁 JSON (re-importable)</button>
+              <button type="button" role="menuitem" data-export="qr">📷 QR image</button>
+            </div>
+          </div>
+          <button type="button" class="btn btn--ghost" id="resultsBackBtn">Back</button>
+          <button type="button" class="btn btn--ghost" id="startOverBtn">Start afresh</button>
+        </div>
+      </div>
+
+      <p class="community-line community-line--results">Proud of this one? Post it on 𝕏 with
+        <strong>#ChoiceaseDecision</strong> — the share buttons add the tag for you. 🚀</p>
+
+      <!-- Advanced analytics -->
+      <div class="advanced-gate">
+        <button type="button" class="btn btn--secondary" id="advancedToggleBtn" aria-expanded="false">🤓 Show advanced analytics</button>
+        <p class="advanced-gate__teaser">Dive deeper — sensitivity, regret analysis, robustness testing, and consulting-grade reports for decision pros. 📊</p>
+      </div>
+
+      <div id="advancedSection" class="advanced is-hidden">
+        <div class="panel is-open" id="panelExec">
+          <button type="button" class="panel__toggle" aria-expanded="true">
+            <span>Executive summary</span><span class="panel__chevron" aria-hidden="true"></span>
+          </button>
+          <div class="panel__body"></div>
+        </div>
+
+        <div class="panel" id="panelDrivers">
+          <button type="button" class="panel__toggle" aria-expanded="false">
+            <span>Why this wins — key drivers</span><span class="panel__chevron" aria-hidden="true"></span>
+          </button>
+          <div class="panel__body"></div>
+        </div>
+
+        <div class="panel" id="panelRanking">
+          <button type="button" class="panel__toggle" aria-expanded="false">
+            <span>Full ranking</span><span class="panel__chevron" aria-hidden="true"></span>
+          </button>
+          <div class="panel__body"></div>
+        </div>
+
+        <div class="panel" id="panelMatrix">
+          <button type="button" class="panel__toggle" aria-expanded="false">
+            <span>Performance heatmap</span><span class="panel__chevron" aria-hidden="true"></span>
+          </button>
+          <div class="panel__body"></div>
+        </div>
+
+        <div class="panel" id="panelSensitivity">
+          <button type="button" class="panel__toggle" aria-expanded="false">
+            <span>Sensitivity &amp; flip points</span><span class="panel__chevron" aria-hidden="true"></span>
+          </button>
+          <div class="panel__body"></div>
+        </div>
+
+        <div class="panel" id="panelWhatIf">
+          <button type="button" class="panel__toggle" aria-expanded="false">
+            <span>What-if studio — live weights</span><span class="panel__chevron" aria-hidden="true"></span>
+          </button>
+          <div class="panel__body"></div>
+        </div>
+
+        <div class="panel" id="panelLenses">
+          <button type="button" class="panel__toggle" aria-expanded="false">
+            <span>Alternative lenses — regret, satisficing, dominance, robustness</span><span class="panel__chevron" aria-hidden="true"></span>
+          </button>
+          <div class="panel__body"></div>
+        </div>
+
+        <div class="panel" id="panelRisks">
+          <button type="button" class="panel__toggle" aria-expanded="false">
+            <span>Risks &amp; weaknesses</span><span class="panel__chevron" aria-hidden="true"></span>
+          </button>
+          <div class="panel__body"></div>
+        </div>
+
+        <div class="panel" id="panelMethod">
+          <button type="button" class="panel__toggle" aria-expanded="false">
+            <span>Method &amp; assumptions</span><span class="panel__chevron" aria-hidden="true"></span>
+          </button>
+          <div class="panel__body"></div>
+        </div>
+
+        <div class="advanced__exports">
+          <h3>Consulting-grade reports</h3>
+          <p>Board-ready documents built from every section above. The PowerPoint uses native, fully editable shapes — restyle it in your corporate theme with zero rework.</p>
+          <div class="advanced__export-btns">
+            <button type="button" class="btn btn--primary" id="advPdfBtn">📄 Download PDF report</button>
+            <button type="button" class="btn btn--primary" id="advPptxBtn">📊 Download PowerPoint deck</button>
+            <button type="button" class="btn btn--ghost" id="copySummaryBtn">Copy executive summary</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>© <span id="year"></span> Choicease · Runs entirely in your browser — nothing is uploaded ·
+      <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> ·
+      <a href="mailto:contact@choicease.com">Contact</a>
+    </p>
+  </footer>
+
+  <!-- How it works modal -->
+  <div class="modal" id="howItWorksModal" role="dialog" aria-modal="true" aria-labelledby="howItWorksTitle">
+    <div class="modal__content">
+      <header class="modal__head">
+        <h2 id="howItWorksTitle">🧭 How Choicease works</h2>
+        <button type="button" class="modal__close" data-close-modal="howItWorksModal" aria-label="Close">&times;</button>
+      </header>
+      <div class="modal__body">
+        <p><strong>Stuck in decision limbo?</strong> We'll walk you out, one easy step at a time — and hand you an answer you can actually trust.</p>
+        <ol>
+          <li><strong>Frame it:</strong> tell us the decision (or import a saved one).</li>
+          <li><strong>List options:</strong> everything on the table.</li>
+          <li><strong>Set criteria:</strong> what matters. <em>💡 Our free AI helper can spark ideas.</em></li>
+          <li><strong>Weigh them:</strong> rate importance 1–5; we normalize to 100%.</li>
+          <li><strong>Rate options:</strong> score each option on each criterion.</li>
+          <li><strong>Results:</strong> a clear winner, honest warnings when it's close, and a whole advanced-analytics world when you want to geek out. 📊</li>
+        </ol>
+        <p><strong>Why you'll love it:</strong></p>
+        <ul>
+          <li>✅ Breaks tough choices into easy steps — with bias alerts along the way</li>
+          <li>🤖 Free AI help for criteria, weights, and ratings (works with ChatGPT, Claude, or Gemini)</li>
+          <li>🔗 Share your decision as a link, image, or QR — friends open it live and can tweak it</li>
+          <li>📈 Advanced analytics: sensitivity, regret analysis, robustness — plus PDF &amp; PowerPoint reports</li>
+          <li>🛡️ Totally private — everything runs in your browser, nothing is uploaded</li>
+          <li>🔁 Free forever, no sign-up</li>
+          <li>📢 Join the fun: post your decision on 𝕏 with <a href="https://x.com/search?q=ChoiceaseDecision" target="_blank" rel="noopener">#ChoiceaseDecision</a> — the best ones land in our <a href="gallery.html">Decision Gallery</a></li>
+        </ul>
+      </div>
+      <footer class="modal__foot">
+        <button type="button" class="btn btn--primary" id="howItWorksStart" data-close-modal="howItWorksModal">Let's decide something!</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Confirm modal -->
+  <div class="modal" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmMessage">
+    <div class="modal__content modal__content--small">
+      <div class="modal__body">
+        <p id="confirmMessage"></p>
+      </div>
+      <footer class="modal__foot">
+        <button type="button" class="btn btn--ghost" id="confirmCancel">Cancel</button>
+        <button type="button" class="btn btn--primary" id="confirmOk">Continue</button>
+      </footer>
+    </div>
+  </div>
+
+</body>
+</html>
