@@ -1,0 +1,18 @@
+{
+  "name": "choicease",
+  "version": "2.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Dev dependencies for the Choicease test suite. The site itself has no build step.",
+  "scripts": {
+    "test": "node tests/engine.test.mjs && node tests/link-pptx.test.mjs && node tests/dom.test.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "^24.0.0",
+    "pako": "2.1.0",
+    "pptxgenjs": "3.12.0"
+  },
+  "dependencies": {
+    "pptxgenjs": "^3.12.0"
+  }
+}

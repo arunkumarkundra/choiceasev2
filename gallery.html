@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Decision Gallery | Choicease — Real Decisions to Explore</title>
+  <meta name="description" content="Real decisions shared by the Choicease community. Search by topic, open any of them live, tweak the weights, make it yours.">
+  <link rel="canonical" href="https://choicease.com/gallery.html">
+  <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+    .gallery-card {
+      background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg);
+      padding: 20px; display: flex; flex-direction: column; gap: 8px;
+      transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+    .gallery-card:hover { border-color: var(--petrol); box-shadow: var(--shadow-card); }
+    .gallery-card h3 { font-family: var(--font-display); font-size: 1.05rem; letter-spacing: -0.01em; }
+    .gallery-card p { color: var(--slate); font-size: 0.88rem; flex: 1; }
+    .gallery-card__winner { font-size: 0.85rem; color: var(--petrol-dark); font-weight: 600; }
+    .gallery-card__meta { font-size: 0.75rem; color: var(--muted); }
+    .gallery-card a.btn { align-self: flex-start; margin-top: 4px; }
+    .gallery-submit { margin-top: 28px; padding: 20px; background: var(--petrol-tint); border: 1px solid #cfe2e0; border-radius: var(--radius-lg); font-size: 0.9rem; color: var(--petrol-dark); }
+    .gallery-tools { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+    .gallery-search { flex: 1 1 220px; font: inherit; padding: 9px 14px; border: 1px solid var(--line); border-radius: 99px; }
+    .gallery-search:focus { outline: none; border-color: var(--petrol); }
+    .gallery-cats { display: flex; gap: 8px; flex-wrap: wrap; }
+    .gallery-card__cat { align-self: flex-start; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--petrol-dark); background: var(--petrol-tint); border-radius: 99px; padding: 2px 10px; }
+    .gallery-empty { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a href="index.html" class="brand"><span class="brand__mark" aria-hidden="true"></span><span class="brand__name">Choicease</span></a>
+    <nav class="topbar__nav"><a class="btn btn--ghost" href="index.html">Make a decision</a></nav>
+  </header>
+  <main class="shell">
+    <section class="step">
+      <header class="step__head">
+        <h1 class="step__title">Decision Gallery</h1>
+        <p class="step__lede">Real decisions from the community. Open any of them live — tweak the weights, swap the options, make it yours.</p>
+      </header>
+      <div class="gallery-tools">
+        <input type="search" class="gallery-search" id="gallerySearch" placeholder="Search decisions… (e.g., car, job, vendor)" aria-label="Search the gallery">
+        <div class="gallery-cats" id="galleryCats" role="group" aria-label="Filter by category"></div>
+      </div>
+      <div class="gallery-grid" id="galleryGrid"><p class="empty-note">Loading decisions…</p></div>
+      <div class="gallery-submit">
+        <strong>Want yours featured?</strong> Email your decision's link to
+        <a href="mailto:contact@choicease.com?subject=Decision%20Gallery%20submission">contact@choicease.com</a>
+        — the app's results page pre-fills this email for you. Emailing us confirms you're happy for it to be
+        published; we hand-pick the most interesting ones.
+      </div>
+    </section>
+  </main>
+  <footer class="footer">
+    <p>© 2026 Choicease · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a></p>
+  </footer>
+  <script>
+    const esc = (s) => String(s || '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    let entries = [];
+    let activeCat = 'All';
+    let query = '';
+
+    function render() {
+      const grid = document.getElementById('galleryGrid');
+      const q = query.trim().toLowerCase();
+      const shown = entries.filter((e) => {
+        const inCat = activeCat === 'All' || (e.category || 'Other') === activeCat;
+        const inQuery = !q || [e.title, e.story, e.winner, e.category].join(' ').toLowerCase().includes(q);
+        return inCat && inQuery;
+      });
+      if (!shown.length) {
+        grid.innerHTML = '<p class="empty-note gallery-empty">No decisions match — try another word or category.</p>';
+        return;
+      }
+      grid.innerHTML = shown.map((e) => `
+        <article class="gallery-card">
+          <span class="gallery-card__cat">${esc(e.category || 'Other')}</span>
+          <h3>${esc(e.title)}</h3>
+          <p>${esc(e.story)}</p>
+          <span class="gallery-card__winner">🏆 ${esc(e.winner)}</span>
+          <span class="gallery-card__meta mono">${Number(e.options) || 0} options · ${Number(e.criteria) || 0} criteria · ${esc(e.date)}</span>
+          <a class="btn btn--primary btn--small" href="${esc(e.link)}">Open it live</a>
+        </article>`).join('');
+    }
+
+    function renderCats() {
+      const cats = ['All', ...new Set(entries.map((e) => e.category || 'Other'))];
+      const box = document.getElementById('galleryCats');
+      box.innerHTML = cats.map((c) => `
+        <button type="button" class="chip ${c === activeCat ? 'chip--all' : ''}" data-cat="${esc(c)}">${esc(c)}</button>`).join('');
+      box.onclick = (e) => {
+        const btn = e.target.closest('[data-cat]');
+        if (!btn) return;
+        activeCat = btn.dataset.cat;
+        renderCats();
+        render();
+      };
+    }
+
+    document.getElementById('gallerySearch').addEventListener('input', (e) => {
+      query = e.target.value;
+      render();
+    });
+
+    fetch('gallery.json')
+      .then((r) => r.json())
+      .then((data) => {
+        entries = data.entries || [];
+        renderCats();
+        render();
+      })
+      .catch(() => {
+        document.getElementById('galleryGrid').innerHTML = '<p class="empty-note">Could not load the gallery. Try refreshing.</p>';
+      });
+  </script>
+</body>
+</html>
